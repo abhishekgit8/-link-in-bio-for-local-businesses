@@ -274,7 +274,7 @@ export default function LinksEditorPage() {
   if (loading) return <PageLoader />;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-3xl">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-medium mb-1">Links</h1>

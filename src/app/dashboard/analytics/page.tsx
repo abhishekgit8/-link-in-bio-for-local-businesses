@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
 
   if (!isPro) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-3xl">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-8">
           <h1 className="text-2xl font-medium mb-1">Analytics</h1>
           <p className="text-sm text-muted">
@@ -159,7 +159,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-medium mb-1">Analytics</h1>
         <p className="text-sm text-muted">Last 30 days</p>

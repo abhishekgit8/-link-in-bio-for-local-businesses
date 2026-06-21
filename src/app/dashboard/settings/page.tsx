@@ -138,7 +138,7 @@ export default function SettingsPage() {
 
   if (!profile) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-8">
           <h1 className="text-2xl font-medium mb-1">Settings</h1>
           <p className="text-sm text-muted">Manage your account and subscription.</p>
@@ -154,7 +154,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-medium mb-1">Settings</h1>
         <p className="text-sm text-muted">Manage your account and subscription.</p>
