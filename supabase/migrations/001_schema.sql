@@ -132,9 +132,7 @@ CREATE POLICY "Public read active links"
 
 CREATE POLICY "Owner full access"
   ON links FOR ALL
-  USING (
-    auth.uid() = (SELECT id FROM profiles WHERE id = profile_id)
-  );
+  USING (auth.uid() = profile_id);
 
 -- Page views policies
 CREATE POLICY "Anyone can insert"
@@ -143,9 +141,7 @@ CREATE POLICY "Anyone can insert"
 
 CREATE POLICY "Owner can read"
   ON page_views FOR SELECT
-  USING (
-    auth.uid() = (SELECT id FROM profiles WHERE id = profile_id)
-  );
+  USING (auth.uid() = profile_id);
 
 -- Link clicks policies
 CREATE POLICY "Anyone can insert"
@@ -155,10 +151,10 @@ CREATE POLICY "Anyone can insert"
 CREATE POLICY "Owner can read"
   ON link_clicks FOR SELECT
   USING (
-    auth.uid() = (
-      SELECT p.id FROM profiles p
-      JOIN links l ON l.profile_id = p.id
-      WHERE l.id = link_id
+    EXISTS (
+      SELECT 1 FROM links
+      WHERE links.id = link_clicks.link_id
+      AND links.profile_id = auth.uid()
     )
   );
 
