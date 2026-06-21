@@ -5,6 +5,7 @@ export type Font = 'inter' | 'serif' | 'poppins';
 export type Category = 'salon' | 'cafe' | 'tutor' | 'freelancer' | 'coach' | 'other';
 export type LinkType = 'url' | 'phone' | 'whatsapp' | 'instagram' | 'maps' | 'email' | 'custom';
 export type CoverType = 'color' | 'image';
+export type SubscriptionStatus = 'inactive' | 'active' | 'cancelling';
 
 export interface Profile {
   id: string;
@@ -20,8 +21,10 @@ export interface Profile {
   button_style: ButtonStyle;
   font: Font;
   subscription_tier: SubscriptionTier;
-  stripe_customer_id: string | null;
-  stripe_subscription_id: string | null;
+  subscription_status: SubscriptionStatus | null;
+  subscription_end_date: string | null;
+  razorpay_customer_id: string | null;
+  razorpay_subscription_id: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -23,9 +23,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, Trash2, Link2, Phone, MessageCircle, Instagram, MapPin, Mail, Globe, Eye, EyeOff } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Link2, Phone, MessageCircle, Instagram, MapPin, Mail, Globe, Eye, EyeOff, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { Link as LinkType, LinkType as LinkTypeEnum } from '@/lib/types';
+import Link from 'next/link';
+import type { Link as LinkType, LinkType as LinkTypeEnum, Profile } from '@/lib/types';
 
 const linkTypes: { value: LinkTypeEnum; label: string; icon: React.ReactNode }[] = [
   { value: 'url', label: 'URL', icon: <Globe className="w-4 h-4" /> },
@@ -149,6 +150,8 @@ export default function LinksEditorPage() {
   const [links, setLinks] = useState<LinkType[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
+  const [isPro, setIsPro] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const supabase = createClient();
 
   const sensors = useSensors(
@@ -165,6 +168,14 @@ export default function LinksEditorPage() {
       }
       setProfileId(user.id);
 
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .single();
+
+      setIsPro(profileData?.subscription_tier === 'pro');
+
       const { data } = await supabase
         .from('links')
         .select('*')
@@ -177,17 +188,23 @@ export default function LinksEditorPage() {
     load();
   }, []);
 
-  const addLink = async () => {
+  const atLimit = !isPro && links.length >= 5;
+
+  const addLink = async (type: LinkTypeEnum = 'url', label = 'New Link', url = '') => {
     if (!profileId) return;
+    if (atLimit) {
+      toast.error('Free plan limited to 5 links. Upgrade to Pro for unlimited.');
+      return;
+    }
     const position = links.length;
 
     const { data, error } = await supabase
       .from('links')
       .insert({
         profile_id: profileId,
-        type: 'url',
-        label: 'New Link',
-        url: '',
+        type,
+        label,
+        url,
         position,
         is_active: true,
       })
@@ -200,6 +217,7 @@ export default function LinksEditorPage() {
     }
 
     setLinks([...links, data]);
+    setShowAddModal(false);
     toast.success('Link added');
   };
 
@@ -246,7 +264,6 @@ export default function LinksEditorPage() {
     const updated = reordered.map((l, i) => ({ ...l, position: i }));
     setLinks(updated);
 
-    // Batch update positions
     const { error } = await supabase.from('links').upsert(
       updated.map((l) => ({ id: l.id, position: l.position, profile_id: l.profile_id }))
     );
@@ -265,10 +282,19 @@ export default function LinksEditorPage() {
             Add, edit, and reorder your links.
           </p>
         </div>
-        <Button size="sm" onClick={addLink}>
-          <Plus className="w-4 h-4 mr-1.5" />
-          Add link
-        </Button>
+        {atLimit ? (
+          <Link href="/pricing">
+            <Button size="sm">
+              <Lock className="w-3.5 h-3.5 mr-1.5" />
+              Upgrade
+            </Button>
+          </Link>
+        ) : (
+          <Button size="sm" onClick={() => setShowAddModal(true)}>
+            <Plus className="w-4 h-4 mr-1.5" />
+            Add link
+          </Button>
+        )}
       </div>
 
       {links.length === 0 ? (
@@ -278,7 +304,7 @@ export default function LinksEditorPage() {
             title="No links yet"
             description="Add your first link to get started."
             action={
-              <Button size="sm" onClick={addLink}>
+              <Button size="sm" onClick={() => setShowAddModal(true)}>
                 <Plus className="w-4 h-4 mr-1.5" />
                 Add link
               </Button>
@@ -311,8 +337,38 @@ export default function LinksEditorPage() {
       )}
 
       <p className="text-xs text-muted mt-4">
-        Pro tip: Drag links to reorder them. {links.length >= 5 && 'Free plan limited to 5 links.'}
+        {!isPro && `Free plan: ${links.length}/5 links used.`} Drag to reorder.
       </p>
+
+      {/* Add link type selector modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <h3 className="font-medium mb-4">Add a link</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {linkTypes.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => addLink(t.value, t.label, '')}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-accent hover:bg-accent/5 transition-all duration-200 text-left"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+                    {t.icon}
+                  </div>
+                  <span className="text-sm font-medium">{t.label}</span>
+                </button>
+              ))}
+            </div>
+            <Button
+              variant="ghost"
+              className="w-full mt-4"
+              onClick={() => setShowAddModal(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

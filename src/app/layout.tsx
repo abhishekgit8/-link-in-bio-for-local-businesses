@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
@@ -27,12 +28,12 @@ export const metadata: Metadata = {
   description:
     "Create a stunning link-in-bio page for your salon, cafe, or freelance business. Share your services, WhatsApp, location and more — all in one link.",
   keywords: [
-    "link in bio",
+    "link in bio india",
     "local business website",
-    "small business online",
-    "WhatsApp business page",
-    "salon website",
-    "cafe online presence",
+    "small business online presence",
+    "whatsapp business page",
+    "salon website india",
+    "freelancer portfolio link",
   ],
   openGraph: {
     type: "website",
@@ -83,6 +84,10 @@ export default function RootLayout({
       className={`${inter.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans bg-surface text-primary">
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
         {children}
         <Toaster
           position="bottom-center"

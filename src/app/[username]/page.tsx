@@ -2,9 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
-import { ProfileTracker } from '@/components/ProfileTracker';
-import { TrackedLinks } from '@/components/TrackedLinks';
 import type { Profile, Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
 
 interface Props {
@@ -82,7 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description:
-      profile.bio || `Visit ${profile.business_name} on Rooted`,
+      profile.bio || `Visit ${profile.business_name} on Rooted. Find their links, WhatsApp, location and more.`,
     openGraph: {
       title: profile.business_name,
       description: profile.bio || undefined,
@@ -145,6 +142,9 @@ export default async function PublicProfilePage({ params }: Props) {
   const styles = themeStyles[theme];
   const isPro = profile.subscription_tier === 'pro';
 
+  // Server-side page view tracking
+  await supabase.from('page_views').insert({ profile_id: profile.id });
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -152,7 +152,8 @@ export default async function PublicProfilePage({ params }: Props) {
     description: profile.bio || undefined,
     url: `https://rooted.sbs/${profile.username}`,
     logo: profile.logo_url || undefined,
-    telephone: safeLinks.find((l: LinkType) => l.type === 'phone')?.url || undefined,
+    telephone: safeLinks.find((l: LinkType) => l.type === 'phone')?.url?.replace('tel:', '') || undefined,
+    email: safeLinks.find((l: LinkType) => l.type === 'email')?.url?.replace('mailto:', '') || undefined,
     sameAs: [
       safeLinks.find((l: LinkType) => l.type === 'instagram')?.url,
     ].filter(Boolean),
@@ -164,7 +165,6 @@ export default async function PublicProfilePage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProfileTracker profileId={profile.id} />
       <div
         className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
         style={{ backgroundColor: styles.bg, color: styles.text }}
@@ -258,6 +258,16 @@ export default async function PublicProfilePage({ params }: Props) {
                   rel="noopener noreferrer"
                   className={btnClass}
                   data-link-id={link.id}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    // Fire and forget click tracking
+                    fetch('/api/track-click', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ linkId: link.id }),
+                    }).catch(() => {});
+                    window.location.href = link.url;
+                  }}
                 >
                   <span className="shrink-0">{getLinkIcon(link.type)}</span>
                   <span>{link.label}</span>
@@ -281,7 +291,6 @@ export default async function PublicProfilePage({ params }: Props) {
               );
             })}
           </div>
-          <TrackedLinks />
 
           {/* No links state */}
           {safeLinks.length === 0 && (
@@ -295,16 +304,14 @@ export default async function PublicProfilePage({ params }: Props) {
         </div>
 
         {/* Footer badge — dofollow backlink (viral SEO loop) */}
-        {!isPro && (
-          <a
-            href="https://rooted.sbs"
-            rel="dofollow"
-            className="mt-8 text-xs transition-opacity hover:opacity-80"
-            style={{ color: styles.muted + '80' }}
-          >
-            Made with Rooted
-          </a>
-        )}
+        <a
+          href="https://rooted.sbs"
+          rel="dofollow"
+          className="mt-8 text-xs transition-opacity hover:opacity-80"
+          style={{ color: styles.muted + '80' }}
+        >
+          Made with Rooted
+        </a>
       </div>
     </>
   );

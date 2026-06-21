@@ -25,14 +25,14 @@ interface DailyViews {
   count: number;
 }
 
-interface DailyClicks {
-  date: string;
+interface LinkClicksByLink {
+  label: string;
   count: number;
 }
 
 export default function AnalyticsPage() {
   const [views, setViews] = useState<DailyViews[]>([]);
-  const [clicks, setClicks] = useState<DailyClicks[]>([]);
+  const [clicksByLink, setClicksByLink] = useState<LinkClicksByLink[]>([]);
   const [totalViews, setTotalViews] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -71,7 +71,6 @@ export default function AnalyticsPage() {
         return;
       }
 
-      // Check if pro
       const { data: profile } = await supabase
         .from('profiles')
         .select('subscription_tier')
@@ -85,7 +84,6 @@ export default function AnalyticsPage() {
         return;
       }
 
-      // Get page views for last 30 days
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -95,18 +93,38 @@ export default function AnalyticsPage() {
         .eq('profile_id', user.id)
         .gte('created_at', thirtyDaysAgo.toISOString());
 
+      // Get links for this profile
+      const { data: linksData } = await supabase
+        .from('links')
+        .select('id, label')
+        .eq('profile_id', user.id);
+
+      const linkIds = (linksData || []).map(l => l.id);
+
       const { data: clicksData } = await supabase
         .from('link_clicks')
         .select('created_at, link_id')
+        .in('link_id', linkIds.length > 0 ? linkIds : ['__none__'])
         .gte('created_at', thirtyDaysAgo.toISOString());
 
       // Aggregate views by day
       const viewsByDay = aggregateByDay(viewsData || []);
-      const clicksByDay = aggregateByDay(clicksData || []);
-
       setViews(viewsByDay);
-      setClicks(clicksByDay);
       setTotalViews((viewsData || []).length);
+
+      // Aggregate clicks by link
+      const linkMap = new Map((linksData || []).map(l => [l.id, l.label]));
+      const clicksByLinkMap = new Map<string, number>();
+      (clicksData || []).forEach(c => {
+        const label = linkMap.get(c.link_id) || 'Unknown';
+        clicksByLinkMap.set(label, (clicksByLinkMap.get(label) || 0) + 1);
+      });
+
+      const clicksByLinkArr = Array.from(clicksByLinkMap.entries())
+        .map(([label, count]) => ({ label, count }))
+        .sort((a, b) => b.count - a.count);
+
+      setClicksByLink(clicksByLinkArr);
       setTotalClicks((clicksData || []).length);
       setLoading(false);
     }
@@ -156,7 +174,7 @@ export default function AnalyticsPage() {
             </div>
             <div>
               <p className="text-2xl font-semibold">{totalViews}</p>
-              <p className="text-xs text-muted">Profile views</p>
+              <p className="text-xs text-muted">Total profile views</p>
             </div>
           </div>
         </Card>
@@ -167,7 +185,7 @@ export default function AnalyticsPage() {
             </div>
             <div>
               <p className="text-2xl font-semibold">{totalClicks}</p>
-              <p className="text-xs text-muted">Link clicks</p>
+              <p className="text-xs text-muted">Total link clicks</p>
             </div>
           </div>
         </Card>
@@ -175,7 +193,7 @@ export default function AnalyticsPage() {
 
       {/* Views chart */}
       <Card className="mb-6">
-        <h3 className="font-medium mb-4">Profile Views</h3>
+        <h3 className="font-medium mb-4">Profile views — last 30 days</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={views}>
@@ -203,14 +221,14 @@ export default function AnalyticsPage() {
         </div>
       </Card>
 
-      {/* Clicks chart */}
+      {/* Clicks by link chart */}
       <Card>
-        <h3 className="font-medium mb-4">Link Clicks</h3>
+        <h3 className="font-medium mb-4">Link clicks by link</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={clicks}>
+            <BarChart data={clicksByLink}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E5E0" />
-              <XAxis dataKey="date" fontSize={11} tick={{ fill: '#6B6B6B' }} />
+              <XAxis dataKey="label" fontSize={11} tick={{ fill: '#6B6B6B' }} />
               <YAxis fontSize={11} tick={{ fill: '#6B6B6B' }} allowDecimals={false} />
               <Tooltip
                 contentStyle={{

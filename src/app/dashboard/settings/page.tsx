@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
   const supabase = createClient();
   const router = useRouter();
 
@@ -51,8 +52,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!username || username === profile?.username) {
-      // Use undefined check instead of direct setState to avoid cascading renders
-      if (usernameAvailable !== null) setUsernameAvailable(null);
       return;
     }
 
@@ -64,11 +63,7 @@ export default function SettingsPage() {
         .eq('username', username)
         .maybeSingle();
 
-      if (error) {
-        setUsernameAvailable(null);
-      } else {
-        setUsernameAvailable(!data);
-      }
+      setUsernameAvailable(error ? null : !data);
       setCheckingUsername(false);
     }, 500);
 
@@ -78,6 +73,14 @@ export default function SettingsPage() {
   const updateUsername = async () => {
     if (!profile || !username.trim()) return;
     setSaving(true);
+
+    // Insert redirect for old username
+    if (profile.username && profile.username !== username.trim().toLowerCase()) {
+      await supabase.from('username_redirects').insert({
+        old_username: profile.username,
+        new_username: username.trim().toLowerCase(),
+      });
+    }
 
     const { error } = await supabase
       .from('profiles')
@@ -102,9 +105,23 @@ export default function SettingsPage() {
     }
   };
 
+  const cancelSubscription = async () => {
+    const res = await fetch('/api/razorpay/cancel', { method: 'POST' });
+    const data = await res.json();
+
+    if (data.success) {
+      toast.success('Subscription will cancel at end of billing period.');
+      setProfile({ ...profile!, subscription_status: 'cancelling' });
+    } else {
+      toast.error(data.error || 'Failed to cancel subscription');
+    }
+  };
+
   const deleteAccount = async () => {
-    if (!confirm('Are you sure? This cannot be undone.')) return;
-    if (!confirm('All your data will be permanently deleted. Continue?')) return;
+    if (deleteConfirm !== 'DELETE') {
+      toast.error('Type DELETE to confirm');
+      return;
+    }
 
     const { error } = await supabase.rpc('delete_user');
     if (error) {
@@ -146,7 +163,7 @@ export default function SettingsPage() {
       <div className="space-y-6">
         {/* Username */}
         <Card className="space-y-4">
-          <h3 className="font-medium">Username</h3>
+          <h3 className="font-medium">Change Username</h3>
           <p className="text-xs text-muted">
             Your public profile URL: rooted.sbs/
             {username || 'your-name'}
@@ -155,7 +172,7 @@ export default function SettingsPage() {
             <div className="flex-1">
               <Input
                 value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                 placeholder="your-business"
               />
               {username !== profile.username && username.trim() && (
@@ -202,6 +219,32 @@ export default function SettingsPage() {
           </div>
         </Card>
 
+        {/* Category */}
+        <Card className="space-y-4">
+          <h3 className="font-medium">Category</h3>
+          <select
+            value={profile.category || ''}
+            onChange={async (e) => {
+              const val = e.target.value;
+              const { error } = await supabase
+                .from('profiles')
+                .update({ category: val || null })
+                .eq('id', profile.id);
+              if (!error) setProfile({ ...profile, category: val as Profile['category'] });
+            }}
+            className="w-full px-4 py-2.5 bg-white border border-border rounded-xl text-sm text-primary outline-none focus:ring-2 focus:ring-accent focus:border-accent appearance-none cursor-pointer"
+          >
+            <option value="">Select a category</option>
+            <option value="salon">Salon / Spa</option>
+            <option value="cafe">Cafe / Restaurant</option>
+            <option value="tutor">Tutor / Teacher</option>
+            <option value="freelancer">Freelancer</option>
+            <option value="coach">Coach / Consultant</option>
+            <option value="photographer">Photographer</option>
+            <option value="other">Other</option>
+          </select>
+        </Card>
+
         {/* Subscription */}
         <Card>
           <div className="flex items-center justify-between mb-4">
@@ -222,9 +265,23 @@ export default function SettingsPage() {
             )}
           </div>
           {profile.subscription_tier === 'pro' && (
-            <p className="text-xs text-muted">
-              You have access to all Pro features. Your subscription is active.
-            </p>
+            <div className="space-y-3">
+              <p className="text-xs text-muted">
+                You have access to all Pro features.
+                {profile.subscription_end_date && (
+                  <> Next billing date: {new Date(profile.subscription_end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</>
+                )}
+              </p>
+              {profile.subscription_status === 'cancelling' ? (
+                <p className="text-xs text-amber-600">
+                  Your subscription will cancel at the end of the billing period.
+                </p>
+              ) : (
+                <Button variant="ghost" size="sm" onClick={cancelSubscription}>
+                  Cancel subscription
+                </Button>
+              )}
+            </div>
           )}
         </Card>
 
@@ -237,9 +294,22 @@ export default function SettingsPage() {
           <p className="text-xs text-muted mb-4">
             Permanently delete your account and all data. This action cannot be undone.
           </p>
-          <Button variant="danger" size="sm" onClick={deleteAccount}>
-            Delete account
-          </Button>
+          <div className="flex items-end gap-2">
+            <Input
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder='Type "DELETE" to confirm'
+              className="flex-1"
+            />
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={deleteAccount}
+              disabled={deleteConfirm !== 'DELETE'}
+            >
+              Delete account
+            </Button>
+          </div>
         </Card>
       </div>
     </div>

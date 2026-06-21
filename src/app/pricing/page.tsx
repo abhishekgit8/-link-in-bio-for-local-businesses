@@ -1,14 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { CheckCircle } from 'lucide-react';
+import { UpgradeButton } from '@/components/UpgradeButton';
+import { Check } from 'lucide-react';
 
 export default function PricingPage() {
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
+
   return (
     <>
       <Navbar />
@@ -21,6 +25,30 @@ export default function PricingPage() {
             <p className="text-muted max-w-md mx-auto">
               Start free. Upgrade when you outgrow the basics.
             </p>
+
+            {/* Billing toggle */}
+            <div className="flex items-center justify-center gap-3 mt-8">
+              <button
+                onClick={() => setBilling('monthly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  billing === 'monthly'
+                    ? 'bg-primary text-white'
+                    : 'bg-border text-muted hover:text-primary'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBilling('yearly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  billing === 'yearly'
+                    ? 'bg-primary text-white'
+                    : 'bg-border text-muted hover:text-primary'
+                }`}
+              >
+                Yearly <span className="text-accent text-xs ml-1">Save 30%</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
@@ -34,7 +62,7 @@ export default function PricingPage() {
               <ul className="space-y-3 mb-8">
                 {freeFeatures.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-muted">
-                    <CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+                    <Check className="w-4 h-4 text-accent mt-0.5 shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -53,21 +81,28 @@ export default function PricingPage() {
               </Badge>
               <h3 className="font-medium text-lg mb-1">Pro</h3>
               <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-3xl font-semibold">₹299</span>
-                <span className="text-sm text-muted">/month</span>
+                <span className="text-3xl font-semibold">
+                  {billing === 'monthly' ? '₹299' : '₹2,499'}
+                </span>
+                <span className="text-sm text-muted">
+                  {billing === 'monthly' ? '/month' : '/year'}
+                </span>
               </div>
-              <p className="text-xs text-muted mb-6">
-                or ₹2,499/year (save 30%)
-              </p>
+              {billing === 'yearly' && (
+                <p className="text-xs text-muted mb-6">
+                  ₹208/month — save ₹1,089 (2 free months)
+                </p>
+              )}
+              {billing === 'monthly' && <div className="mb-6" />}
               <ul className="space-y-3 mb-8">
                 {proFeatures.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-muted">
-                    <CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+                    <Check className="w-4 h-4 text-accent mt-0.5 shrink-0" />
                     {f}
                   </li>
                 ))}
               </ul>
-              <Button className="w-full">Upgrade to Pro</Button>
+              <UpgradeButton plan={billing} />
             </Card>
           </div>
 
@@ -94,15 +129,16 @@ export default function PricingPage() {
 const freeFeatures = [
   '1 beautiful profile page',
   'Up to 5 links',
-  'Basic themes (Classic, Dark)',
+  'Basic themes (Classic, Warm)',
+  'WhatsApp, Instagram, Maps links',
   'QR code for your page',
   '"Made with Rooted" badge',
 ];
 
 const proFeatures = [
   'Unlimited links',
-  'All themes & fonts',
-  'Full analytics dashboard',
+  'All 4 themes including Dark & Minimal',
+  'Analytics dashboard',
   'Remove "Made with Rooted" badge',
   'Custom button colors',
   'Priority email support',
@@ -111,19 +147,19 @@ const proFeatures = [
 
 const faqs = [
   {
-    q: 'Can I switch plans anytime?',
-    a: 'Yes. Upgrade or downgrade at any time. If you downgrade, you\'ll keep Pro features until the end of your billing period.',
-  },
-  {
-    q: 'What payment methods do you accept?',
-    a: 'We accept all major credit/debit cards via Stripe. UPI and net banking coming soon.',
-  },
-  {
-    q: 'Is there a free trial for Pro?',
-    a: 'You can start with the Free plan and upgrade whenever you\'re ready. No time limit on the free plan.',
+    q: 'Do I need a website?',
+    a: 'No. Your Rooted page IS your website. Share it everywhere.',
   },
   {
     q: 'Can I cancel anytime?',
-    a: 'Absolutely. No contracts, no lock-in. Cancel with one click and keep your page on the Free plan.',
+    a: 'Yes. Cancel from settings, keeps Pro until billing period ends.',
+  },
+  {
+    q: 'Do you support UPI?',
+    a: 'Yes — UPI, cards, net banking, wallets via Razorpay.',
+  },
+  {
+    q: 'Can I switch plans anytime?',
+    a: 'Yes. Upgrade or downgrade at any time. If you downgrade, you\'ll keep Pro features until the end of your billing period.',
   },
 ];

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import toast from 'react-hot-toast';
+import { Check, X } from 'lucide-react';
 
 const categories = [
   { value: 'salon', label: 'Salon / Spa' },
@@ -13,14 +14,18 @@ const categories = [
   { value: 'tutor', label: 'Tutor / Teacher' },
   { value: 'freelancer', label: 'Freelancer' },
   { value: 'coach', label: 'Coach / Consultant' },
+  { value: 'photographer', label: 'Photographer' },
   { value: 'other', label: 'Other' },
 ];
 
+const usernameRegex = /^[a-z0-9-]{3,30}$/;
+
 export default function OnboardingPage() {
-  const [step, setStep] = useState(0);
   const [businessName, setBusinessName] = useState('');
-  const [category, setCategory] = useState('');
   const [username, setUsername] = useState('');
+  const [category, setCategory] = useState('');
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
@@ -34,7 +39,6 @@ export default function OnboardingPage() {
         return;
       }
 
-      // Check if profile already exists
       const { data } = await supabase
         .from('profiles')
         .select('business_name')
@@ -46,30 +50,71 @@ export default function OnboardingPage() {
         return;
       }
 
-      // Check for pending data from signup
-      const pending = sessionStorage.getItem('pending_profile');
-      if (pending) {
-        const parsed = JSON.parse(pending);
-        setBusinessName(parsed.business_name || '');
-        setCategory(parsed.category || '');
-        sessionStorage.removeItem('pending_profile');
-      }
-
       setLoading(false);
     }
     checkProfile();
   }, []);
+
+  const checkUsernameAvailability = useCallback(
+    async (value: string) => {
+      if (!usernameRegex.test(value)) {
+        setUsernameAvailable(null);
+        return;
+      }
+
+      setCheckingUsername(true);
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', value)
+        .maybeSingle();
+
+      setUsernameAvailable(!data);
+      setCheckingUsername(false);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!username || !usernameRegex.test(username)) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      checkUsernameAvailability(username);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [username]);
+
+  const generateUsername = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 30);
+  };
 
   const createProfile = async () => {
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    const finalUsername = username || generateUsername(businessName);
+
+    if (!usernameRegex.test(finalUsername)) {
+      toast.error('Username must be 3-30 characters, lowercase letters, numbers, or hyphens.');
+      setSaving(false);
+      return;
+    }
+
     const { error } = await supabase.from('profiles').upsert({
       id: user.id,
       business_name: businessName,
       category,
-      username: username || businessName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+      username: finalUsername,
       theme: 'classic',
       button_style: 'filled',
       font: 'inter',
@@ -77,7 +122,11 @@ export default function OnboardingPage() {
     });
 
     if (error) {
-      toast.error(error.message);
+      if (error.message.includes('username')) {
+        toast.error('Username is already taken. Please choose another.');
+      } else {
+        toast.error(error.message);
+      }
       setSaving(false);
       return;
     }
@@ -141,19 +190,42 @@ export default function OnboardingPage() {
             </select>
           </div>
 
-          <Input
-            label="Username (optional)"
-            placeholder="priyas-beauty-studio"
-            value={username}
-            onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ''))}
-            helperText="Your page will be at rooted.sbs/username"
-          />
+          <div className="w-full">
+            <Input
+              label="Username"
+              placeholder="priyas-beauty-studio"
+              value={username}
+              onChange={(e) => {
+                const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                setUsername(val);
+              }}
+              error={username.length > 0 && !usernameRegex.test(username) ? '3-30 chars, lowercase letters, numbers, hyphens only' : undefined}
+              helperText="Your page will be at rooted.sbs/username"
+            />
+            {username.length > 0 && usernameRegex.test(username) && (
+              <div className="flex items-center gap-1 mt-1">
+                {checkingUsername ? (
+                  <span className="text-xs text-muted">Checking...</span>
+                ) : usernameAvailable === true ? (
+                  <>
+                    <Check className="w-3 h-3 text-green-500" />
+                    <span className="text-xs text-green-600">Available</span>
+                  </>
+                ) : usernameAvailable === false ? (
+                  <>
+                    <X className="w-3 h-3 text-red-500" />
+                    <span className="text-xs text-red-500">Taken</span>
+                  </>
+                ) : null}
+              </div>
+            )}
+          </div>
 
           <Button
             className="w-full mt-2"
             onClick={createProfile}
             loading={saving}
-            disabled={!businessName}
+            disabled={!businessName || !category || (username.length > 0 && usernameAvailable === false)}
           >
             Create my page
           </Button>

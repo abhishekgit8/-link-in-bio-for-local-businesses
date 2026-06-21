@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { PhoneFrame } from '@/components/ui/PhoneFrame';
-import { CheckCircle } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -14,20 +13,16 @@ export default function LandingPage() {
       <main>
         {/* Hero */}
         <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none" style={{ background: 'rgba(200,241,53,0.12)' }} />
           <div className="max-w-6xl mx-auto relative">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <Badge variant="new" className="mb-4">
-                  Launching soon
-                </Badge>
                 <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl leading-[1.1] tracking-[-0.02em] text-primary mb-4">
                   Your business deserves a home online.
                 </h1>
                 <p className="text-lg text-muted mb-8 max-w-md leading-relaxed">
-                  One beautiful page for your salon, cafe, or studio. Share your
-                  links, services, and contact info — all from a single, elegant
-                  link.
+                  Create a stunning link-in-bio page in 2 minutes. Share your
+                  services, WhatsApp, location — all in one link.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link href="/signup">
@@ -35,29 +30,35 @@ export default function LandingPage() {
                       Get started free
                     </Button>
                   </Link>
-                  <Link href="#features">
+                  <Link href="/pricing">
                     <Button variant="ghost" size="lg" className="w-full sm:w-auto">
-                      See how it works
+                      See an example
                     </Button>
                   </Link>
                 </div>
 
-                {/* Social proof */}
-                <div className="flex items-center gap-3 mt-10">
-                  <div className="flex -space-x-2">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-8 h-8 rounded-full bg-border border-2 border-white flex items-center justify-center text-[10px] font-medium text-muted"
-                      >
-                        {String.fromCharCode(65 + i)}
-                      </div>
-                    ))}
+                {/* Social proof strip */}
+                <div className="mt-12">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex -space-x-2">
+                      {['#E8D5F5', '#D5E8F5', '#F5E8D5', '#D5F5E8', '#F5D5E8'].map((bg, i) => (
+                        <div
+                          key={i}
+                          className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-medium text-primary"
+                          style={{ backgroundColor: bg }}
+                        >
+                          {['P', 'A', 'R', 'S', 'M'][i]}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted">
+                      <span className="font-semibold text-primary">500+</span> local businesses on Rooted
+                    </p>
                   </div>
-                  <p className="text-sm text-muted">
-                    <span className="font-semibold text-primary">500+</span> local
-                    businesses trust Rooted
-                  </p>
+                  <div className="flex items-center gap-1 text-sm text-muted">
+                    <span className="text-accent">★★★★★</span>
+                    <span>Loved by salons, cafes & tutors across India</span>
+                  </div>
                 </div>
               </div>
 
@@ -78,8 +79,7 @@ export default function LandingPage() {
               Everything you need in one link
             </h2>
             <p className="text-muted text-center mb-12 max-w-md mx-auto">
-              A professional online presence that&apos;s as easy to set up as it is
-              beautiful.
+              A professional online presence that&apos;s as easy to set up as it is beautiful.
             </p>
             <div className="grid md:grid-cols-3 gap-6">
               {features.map((f) => (
@@ -88,17 +88,35 @@ export default function LandingPage() {
                     {f.icon}
                   </div>
                   <h3 className="font-medium text-lg mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted leading-relaxed">
-                    {f.desc}
-                  </p>
+                  <p className="text-sm text-muted leading-relaxed">{f.desc}</p>
                 </Card>
               ))}
             </div>
           </div>
         </section>
 
+        {/* How it works */}
+        <section className="py-20 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="font-serif text-3xl sm:text-4xl tracking-[-0.02em] text-center mb-12">
+              How it works
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+              {steps.map((step, i) => (
+                <div key={i} className="text-center">
+                  <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-4 text-sm font-semibold text-primary">
+                    {i + 1}
+                  </div>
+                  <h3 className="font-medium mb-2">{step.title}</h3>
+                  <p className="text-sm text-muted">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Pricing */}
-        <section id="pricing" className="py-20 px-4">
+        <section id="pricing" className="py-20 px-4 bg-white">
           <div className="max-w-6xl mx-auto">
             <h2 className="font-serif text-3xl sm:text-4xl tracking-[-0.02em] text-center mb-4">
               Simple, transparent pricing
@@ -114,7 +132,8 @@ export default function LandingPage() {
                 features={[
                   '1 profile page',
                   'Up to 5 links',
-                  'Basic themes',
+                  'Basic themes (Classic, Warm)',
+                  'WhatsApp, Instagram, Maps links',
                   '"Made with Rooted" badge',
                 ]}
                 cta="Get started free"
@@ -127,9 +146,9 @@ export default function LandingPage() {
                 period="/month"
                 features={[
                   'Unlimited links',
-                  'All themes & fonts',
-                  'Analytics',
-                  'Remove badge',
+                  'All 4 themes including Dark & Minimal',
+                  'Analytics dashboard',
+                  'Remove "Made with Rooted" badge',
                   'Custom button colors',
                   'Priority support',
                 ]}
@@ -154,9 +173,7 @@ function SampleProfile() {
         PB
       </div>
       <h3 className="font-medium text-base">Priya&apos;s Beauty Studio</h3>
-      <p className="text-xs text-muted mt-1">
-        Bridal • Facials • Hair
-      </p>
+      <p className="text-xs text-muted mt-1">Bridal • Facials • Hair</p>
       <p className="text-xs text-muted mt-2 max-w-[200px]">
         Professional beauty services in your neighborhood. Walk-ins welcome!
       </p>
@@ -180,49 +197,51 @@ function SampleProfile() {
 const features = [
   {
     title: 'One link for everything',
-    desc: 'Put your Instagram, WhatsApp, bookings, and menu behind a single beautiful link.',
-    icon: <LinkIcon />,
+    desc: 'Share your WhatsApp, services, location, Instagram — from one URL.',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </svg>
+    ),
   },
   {
     title: 'Looks stunning on mobile',
-    desc: 'Every page is crafted to feel premium on phones — because that&apos;s where your customers are.',
-    icon: <MobileIcon />,
+    desc: 'Your customers are on mobile. Your page loads instantly, looks premium.',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+        <line x1="12" y1="18" x2="12.01" y2="18" />
+      </svg>
+    ),
   },
   {
-    title: 'Collect leads & bookings',
-    desc: 'Add phone links, WhatsApp buttons, Google Maps embeds — turn visitors into customers.',
-    icon: <LeadsIcon />,
+    title: "Know what's working",
+    desc: 'See how many people visited your page and clicked your links.',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
   },
 ];
 
-function LinkIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-    </svg>
-  );
-}
-
-function MobileIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-      <line x1="12" y1="18" x2="12.01" y2="18" />
-    </svg>
-  );
-}
-
-function LeadsIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
+const steps = [
+  {
+    title: 'Sign up free',
+    desc: 'Create your account in seconds. No credit card needed.',
+  },
+  {
+    title: 'Add your links & logo',
+    desc: 'Add your WhatsApp, Instagram, services, and upload your logo.',
+  },
+  {
+    title: 'Share your rooted.sbs/yourname link',
+    desc: 'Put your link in your bio, QR code, or share directly.',
+  },
+];
 
 function PricingCard({
   name,
@@ -260,7 +279,10 @@ function PricingCard({
       <ul className="space-y-3 mb-8">
         {features.map((f) => (
           <li key={f} className="flex items-start gap-2 text-sm text-muted">
-            <CheckCircle className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+            <svg className="w-4 h-4 text-accent mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
             {f}
           </li>
         ))}
