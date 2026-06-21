@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { AlertTriangle, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import type { Profile } from '@/lib/types';
 
@@ -26,7 +27,10 @@ export default function SettingsPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       setEmail(user.email || '');
 
@@ -47,7 +51,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!username || username === profile?.username) {
-      setUsernameAvailable(null);
+      // Use undefined check instead of direct setState to avoid cascading renders
+      if (usernameAvailable !== null) setUsernameAvailable(null);
       return;
     }
 
@@ -113,7 +118,23 @@ export default function SettingsPage() {
   };
 
   if (loading) return <PageLoader />;
-  if (!profile) return null;
+
+  if (!profile) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
+        <div className="mb-8">
+          <h1 className="text-2xl font-medium mb-1">Settings</h1>
+          <p className="text-sm text-muted">Manage your account and subscription.</p>
+        </div>
+        <Card>
+          <div className="text-center py-8">
+            <p className="text-sm text-muted mb-4">Unable to load your profile. Please try refreshing the page.</p>
+            <Button onClick={() => window.location.reload()} size="sm">Refresh</Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
@@ -195,9 +216,9 @@ export default function SettingsPage() {
               </p>
             </div>
             {profile.subscription_tier !== 'pro' && (
-              <a href="/pricing">
+              <Link href="/pricing">
                 <Button size="sm">Upgrade to Pro</Button>
-              </a>
+              </Link>
             )}
           </div>
           {profile.subscription_tier === 'pro' && (

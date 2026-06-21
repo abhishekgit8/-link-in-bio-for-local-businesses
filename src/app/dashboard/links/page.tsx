@@ -124,7 +124,7 @@ function SortableLinkCard({
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Input
             placeholder="Label"
             value={link.label}

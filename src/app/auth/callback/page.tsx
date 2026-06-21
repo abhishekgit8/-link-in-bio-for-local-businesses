@@ -10,7 +10,7 @@ function CallbackHandler() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const handleCallback = async () => {
+    const handle = async () => {
       const code = searchParams.get('code');
       const next = searchParams.get('next') ?? '/dashboard';
 
@@ -23,15 +23,16 @@ function CallbackHandler() {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
-        console.error('[auth/callback] exchangeCodeForSession error:', error);
-        router.replace(`/login?error=auth_failed&message=${encodeURIComponent(error.message)}`);
+        router.replace(
+          `/login?error=auth_failed&message=${encodeURIComponent(error.message)}`,
+        );
         return;
       }
 
       router.replace(next);
     };
 
-    handleCallback();
+    handle();
   }, [router, searchParams]);
 
   return <PageLoader />;

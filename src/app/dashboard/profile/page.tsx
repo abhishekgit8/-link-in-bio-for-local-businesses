@@ -21,7 +21,10 @@ export default function ProfileEditorPage() {
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       const { data: profileData } = await supabase
         .from('profiles')
@@ -98,7 +101,23 @@ export default function ProfileEditorPage() {
   };
 
   if (loading) return <PageLoader />;
-  if (!profile) return null;
+
+  if (!profile) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-medium mb-1">Edit Profile</h1>
+          <p className="text-sm text-muted">Update how your business appears on your public page.</p>
+        </div>
+        <Card>
+          <div className="text-center py-8">
+            <p className="text-sm text-muted mb-4">Unable to load your profile. Please try refreshing the page.</p>
+            <Button onClick={() => window.location.reload()} size="sm">Refresh</Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

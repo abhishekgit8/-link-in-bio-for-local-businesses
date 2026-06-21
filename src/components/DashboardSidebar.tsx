@@ -10,8 +10,16 @@ const navItems = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/dashboard/profile', label: 'Profile', icon: User },
   { href: '/dashboard/links', label: 'Links', icon: Link2 },
-  { href: '/dashboard/appearance', label: 'Appearance', icon: Palette },
-  { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/dashboard/appearance', label: 'Theme', icon: Palette },
+  { href: '/dashboard/analytics', label: 'Stats', icon: BarChart3 },
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+];
+
+const mobileNavItems = [
+  { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
+  { href: '/dashboard/links', label: 'Links', icon: Link2 },
+  { href: '/dashboard/profile', label: 'Profile', icon: User },
+  { href: '/dashboard/appearance', label: 'Theme', icon: Palette },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -74,9 +82,9 @@ export function DashboardSidebar() {
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border px-2 pb-safe">
-        <div className="flex items-center justify-around py-1">
-          {navItems.map((item) => {
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border">
+        <div className="flex items-center justify-around py-2 px-1">
+          {mobileNavItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
             return (
@@ -84,12 +92,12 @@ export function DashboardSidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors duration-200',
+                  'flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg text-[10px] font-medium transition-colors duration-200 min-w-0 flex-1',
                   isActive ? 'text-primary' : 'text-muted'
                 )}
               >
-                <Icon className="w-5 h-5" />
-                {item.label}
+                <Icon className="w-5 h-5 shrink-0" />
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}

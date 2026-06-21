@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
 import type { Profile } from '@/lib/types';
 
@@ -19,7 +20,10 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       const { data } = await supabase
         .from('profiles')
@@ -88,9 +92,9 @@ export default function DashboardPage() {
         <Card className="mb-6">
           <p className="text-sm text-muted">
             Set up your username in{" "}
-            <a href="/dashboard/settings" className="text-primary font-medium underline">
+            <Link href="/dashboard/settings" className="text-primary font-medium underline">
               Settings
-            </a>{" "}
+            </Link>{" "}
             to get your public link.
           </p>
         </Card>
@@ -103,9 +107,9 @@ export default function DashboardPage() {
             <p className="text-sm text-muted mb-4">
               Let&apos;s get started. First, set up your profile.
             </p>
-            <a href="/dashboard/settings">
+            <Link href="/dashboard/settings">
               <Button>Get started</Button>
-            </a>
+            </Link>
           </div>
         </Card>
       )}

@@ -34,12 +34,16 @@ export default function AppearancePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [links, setLinks] = useState<LinkType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       const { data: profileData } = await supabase
         .from('profiles')
@@ -78,15 +82,42 @@ export default function AppearancePage() {
   };
 
   if (loading) return <PageLoader />;
-  if (!profile) return null;
+
+  if (!profile) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-medium mb-1">Appearance</h1>
+          <p className="text-sm text-muted">Customize the look and feel of your public page.</p>
+        </div>
+        <Card>
+          <div className="text-center py-8">
+            <p className="text-sm text-muted mb-4">Unable to load your profile. Please try refreshing the page.</p>
+            <Button onClick={() => window.location.reload()} size="sm">Refresh</Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-medium mb-1">Appearance</h1>
-        <p className="text-sm text-muted">
-          Customize the look and feel of your public page.
-        </p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-medium mb-1">Appearance</h1>
+          <p className="text-sm text-muted">
+            Customize the look and feel of your public page.
+          </p>
+        </div>
+        <div className="md:hidden">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? 'Edit' : 'Preview'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-5 gap-8">
@@ -118,12 +149,12 @@ export default function AppearancePage() {
           {/* Button style */}
           <Card>
             <h3 className="font-medium mb-4">Button Style</h3>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {buttonStyles.map((bs) => (
                 <button
                   key={bs.value}
                   onClick={() => updateTheme('button_style', bs.value)}
-                  className={`flex-1 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
+                  className={`py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
                     profile.button_style === bs.value
                       ? 'border-accent bg-accent/5'
                       : 'border-border hover:border-primary/20'
@@ -138,12 +169,12 @@ export default function AppearancePage() {
           {/* Font */}
           <Card>
             <h3 className="font-medium mb-4">Font</h3>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {fonts.map((f) => (
                 <button
                   key={f.value}
                   onClick={() => updateTheme('font', f.value)}
-                  className={`flex-1 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
+                  className={`py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all duration-200 ${
                     profile.font === f.value
                       ? 'border-accent bg-accent/5'
                       : 'border-border hover:border-primary/20'
@@ -166,6 +197,22 @@ export default function AppearancePage() {
           </div>
         </div>
       </div>
+
+      {/* Mobile preview overlay */}
+      {showPreview && (
+        <div className="fixed inset-0 z-40 bg-white md:hidden overflow-y-auto pt-4">
+          <div className="flex justify-end px-4 mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowPreview(false)}
+            >
+              Close preview
+            </Button>
+          </div>
+          <ProfilePreview profile={profile} links={links} />
+        </div>
+      )}
     </div>
   );
 }

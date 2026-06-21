@@ -18,6 +18,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { BarChart3, Eye, MousePointerClick } from 'lucide-react';
+import Link from 'next/link';
 
 interface DailyViews {
   date: string;
@@ -35,16 +36,40 @@ export default function AnalyticsPage() {
   const [totalViews, setTotalViews] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [profileId, setProfileId] = useState<string | null>(null);
   const [isPro, setIsPro] = useState(false);
   const supabase = createClient();
+
+  function aggregateByDay(data: { created_at: string }[]): DailyViews[] {
+    const days: Record<string, number> = {};
+    const today = new Date();
+
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      days[key] = 0;
+    }
+
+    data.forEach((item) => {
+      const key = new Date(item.created_at).toISOString().split('T')[0];
+      if (days[key] !== undefined) {
+        days[key]++;
+      }
+    });
+
+    return Object.entries(days).map(([date, count]) => ({
+      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      count,
+    }));
+  }
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      setProfileId(user.id);
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       // Check if pro
       const { data: profile } = await supabase
@@ -88,30 +113,6 @@ export default function AnalyticsPage() {
     load();
   }, []);
 
-  function aggregateByDay(data: { created_at: string }[]): DailyViews[] {
-    const days: Record<string, number> = {};
-    const today = new Date();
-
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      days[key] = 0;
-    }
-
-    data.forEach((item) => {
-      const key = new Date(item.created_at).toISOString().split('T')[0];
-      if (days[key] !== undefined) {
-        days[key]++;
-      }
-    });
-
-    return Object.entries(days).map(([date, count]) => ({
-      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      count,
-    }));
-  }
-
   if (loading) return <PageLoader />;
 
   if (!isPro) {
@@ -129,9 +130,9 @@ export default function AnalyticsPage() {
             title="Upgrade to see analytics"
             description="Analytics are available on the Pro plan. Upgrade to track your page views and link clicks."
             action={
-              <a href="/pricing">
+              <Link href="/pricing">
                 <Button size="sm">View pricing</Button>
-              </a>
+              </Link>
             }
           />
         </Card>
