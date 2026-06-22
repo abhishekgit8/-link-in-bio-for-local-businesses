@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { BarChart3, Link2, Palette, Settings, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -39,11 +40,7 @@ export function DashboardSidebar() {
       <aside className="hidden md:flex flex-col w-60 border-r border-border bg-white h-screen sticky top-0">
         <div className="p-5 border-b border-border">
           <Link href="/" className="flex items-center gap-2">
-            <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-              <circle cx="16" cy="16" r="15" fill="#C8F135" />
-              <path d="M16 8C14 8 10 9.5 10 14c0 3 2 4.5 2 4.5l2 6h4l2-6s2-1.5 2-4.5c0-4.5-4-6-6-6z" fill="#1A1A1A" />
-              <circle cx="16" cy="13" r="1.5" fill="#C8F135" />
-            </svg>
+            <Logo size={24} />
             <span className="font-serif text-lg tracking-tight">Rooted</span>
           </Link>
         </div>

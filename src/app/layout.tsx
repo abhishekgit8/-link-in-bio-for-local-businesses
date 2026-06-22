@@ -42,6 +42,9 @@ export const metadata: Metadata = {
     "salon website india",
     "freelancer portfolio link",
   ],
+  icons: {
+    icon: "/favicon.svg",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",

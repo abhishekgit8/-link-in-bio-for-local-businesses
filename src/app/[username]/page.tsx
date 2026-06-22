@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
 import { LinkItem } from '@/components/LinkItem';
@@ -197,7 +198,7 @@ export default async function PublicProfilePage({ params }: Props) {
           )}
 
           <div className="text-center mt-12">
-            <a
+            <Link
               href="/"
               className="text-xs inline-flex items-center gap-1.5 opacity-40 hover:opacity-70 transition-opacity"
             >
@@ -206,7 +207,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 <path d="M12 8v4l3 3" />
               </svg>
               Made with Rooted
-            </a>
+            </Link>
           </div>
         </div>
       </div>

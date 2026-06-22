@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Logo } from '@/components/Logo';
 import toast from 'react-hot-toast';
 
 export default function SignupPage() {
@@ -55,11 +56,7 @@ export default function SignupPage() {
           href="/"
           className="flex items-center justify-center gap-2 mb-8"
         >
-          <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-            <circle cx="16" cy="16" r="15" fill="#C8F135" />
-            <path d="M16 8C14 8 10 9.5 10 14c0 3 2 4.5 2 4.5l2 6h4l2-6s2-1.5 2-4.5c0-4.5-4-6-6-6z" fill="#1A1A1A" />
-            <circle cx="16" cy="13" r="1.5" fill="#C8F135" />
-          </svg>
+          <Logo size={28} />
           <span className="font-serif text-xl tracking-tight">Rooted</span>
         </Link>
 
