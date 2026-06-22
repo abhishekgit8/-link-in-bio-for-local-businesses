@@ -141,8 +141,8 @@ export default async function PublicProfilePage({ params }: Props) {
   const font = (profile.font || 'inter') as Font;
   const styles = themeStyles[theme];
 
-  // Server-side page view tracking
-  await supabase.from('page_views').insert({ profile_id: profile.id });
+  // Server-side page view tracking (fire-and-forget, don't crash the page)
+  void supabase.from('page_views').insert({ profile_id: profile.id });
 
   const jsonLd = {
     '@context': 'https://schema.org',

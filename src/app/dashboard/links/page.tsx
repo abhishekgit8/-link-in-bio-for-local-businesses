@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { Card } from '@/components/ui/Card';
@@ -23,28 +23,68 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, Trash2, Link2, Phone, MessageCircle, Instagram, MapPin, Mail, Globe, Eye, EyeOff } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Link2, Phone, MessageCircle, Instagram, MapPin, Mail, Globe, Eye, EyeOff, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Link as LinkType, LinkType as LinkTypeEnum } from '@/lib/types';
 
-const linkTypes: { value: LinkTypeEnum; label: string; icon: React.ReactNode }[] = [
-  { value: 'url', label: 'URL', icon: <Globe className="w-4 h-4" /> },
-  { value: 'phone', label: 'Phone', icon: <Phone className="w-4 h-4" /> },
-  { value: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle className="w-4 h-4" /> },
-  { value: 'instagram', label: 'Instagram', icon: <Instagram className="w-4 h-4" /> },
-  { value: 'maps', label: 'Google Maps', icon: <MapPin className="w-4 h-4" /> },
-  { value: 'email', label: 'Email', icon: <Mail className="w-4 h-4" /> },
-  { value: 'custom', label: 'Custom', icon: <Link2 className="w-4 h-4" /> },
+const linkTypes: { value: LinkTypeEnum; label: string; icon: React.ReactNode; placeholder: string }[] = [
+  { value: 'url', label: 'URL', icon: <Globe className="w-4 h-4" />, placeholder: 'https://example.com' },
+  { value: 'phone', label: 'Phone', icon: <Phone className="w-4 h-4" />, placeholder: '9876543210' },
+  { value: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle className="w-4 h-4" />, placeholder: '9876543210' },
+  { value: 'instagram', label: 'Instagram', icon: <Instagram className="w-4 h-4" />, placeholder: 'username or URL' },
+  { value: 'maps', label: 'Google Maps', icon: <MapPin className="w-4 h-4" />, placeholder: 'Address or Google Maps URL' },
+  { value: 'email', label: 'Email', icon: <Mail className="w-4 h-4" />, placeholder: 'hello@example.com' },
+  { value: 'custom', label: 'Custom', icon: <Link2 className="w-4 h-4" />, placeholder: 'https://...' },
 ];
+
+function formatUrlForSave(type: LinkTypeEnum, value: string): string {
+  if (!value) return '';
+  switch (type) {
+    case 'whatsapp': {
+      if (value.startsWith('https://wa.me/')) return value;
+      const cleaned = value.replace(/\D/g, '');
+      return cleaned ? `https://wa.me/${cleaned}` : value;
+    }
+    case 'phone': {
+      if (value.startsWith('tel:')) return value;
+      const digits = value.replace(/[^\d+]/g, '');
+      return digits ? `tel:${digits}` : value;
+    }
+    case 'email': {
+      if (value.startsWith('mailto:')) return value;
+      return `mailto:${value}`;
+    }
+    case 'instagram': {
+      if (value.startsWith('http')) return value;
+      return `https://instagram.com/${value.replace('@', '')}`;
+    }
+    case 'maps': {
+      if (value.startsWith('http')) return value;
+      return `https://maps.google.com/?q=${encodeURIComponent(value)}`;
+    }
+    default:
+      return value;
+  }
+}
+
+function getDisplayValue(type: LinkTypeEnum, url: string): string {
+  if (!url) return '';
+  switch (type) {
+    case 'phone': return url.replace('tel:', '');
+    case 'email': return url.replace('mailto:', '');
+    case 'whatsapp': return url.replace('https://wa.me/', '');
+    default: return url;
+  }
+}
 
 function SortableLinkCard({
   link,
-  onUpdate,
+  onSave,
   onDelete,
   onToggle,
 }: {
   link: LinkType;
-  onUpdate: (id: string, data: Partial<LinkType>) => void;
+  onSave: (id: string, data: Partial<LinkType>) => Promise<void>;
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
 }) {
@@ -58,89 +98,106 @@ function SortableLinkCard({
   };
 
   const typeMeta = linkTypes.find((t) => t.value === link.type);
+  const [label, setLabel] = useState(link.label);
+  const [urlValue, setUrlValue] = useState(getDisplayValue(link.type, link.url));
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const isDirty = label !== link.label || urlValue !== getDisplayValue(link.type, link.url);
 
-  const formatUrl = (type: LinkTypeEnum, value: string) => {
-    switch (type) {
-      case 'whatsapp':
-        const cleaned = value.replace(/\D/g, '');
-        return `https://wa.me/${cleaned}`;
-      case 'phone':
-        return `tel:${value.replace(/\s/g, '')}`;
-      case 'email':
-        return `mailto:${value}`;
-      case 'instagram':
-        return value.startsWith('http') ? value : `https://instagram.com/${value.replace('@', '')}`;
-      case 'maps':
-        return value.startsWith('http') ? value : `https://maps.google.com/?q=${encodeURIComponent(value)}`;
-      default:
-        return value;
-    }
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave(link.id, {
+      label,
+      url: formatUrlForSave(link.type, urlValue),
+    });
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleTypeChange = (newType: LinkTypeEnum) => {
+    onSave(link.id, { type: newType, url: '', icon: null });
+    setUrlValue('');
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3"
+      className="bg-card border border-border rounded-2xl p-4 space-y-3"
     >
-      <button
-        className="cursor-grab active:cursor-grabbing text-muted/40 hover:text-muted transition-colors touch-none"
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="w-4 h-4" />
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          className="cursor-grab active:cursor-grabbing text-muted/40 hover:text-muted transition-colors touch-none"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
 
-      <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
-        {typeMeta?.icon || <Link2 className="w-4 h-4" />}
-      </div>
+        <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
+          {typeMeta?.icon || <Link2 className="w-4 h-4" />}
+        </div>
 
-      <div className="flex-1 min-w-0 space-y-2">
-        <div className="flex items-center gap-2">
-          <select
-            value={link.type}
-            onChange={(e) => {
-              const newType = e.target.value as LinkTypeEnum;
-              onUpdate(link.id, { type: newType, url: '', icon: null });
-            }}
-            className="text-xs font-medium bg-transparent border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-accent"
-          >
-            {linkTypes.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+        <select
+          value={link.type}
+          onChange={(e) => handleTypeChange(e.target.value as LinkTypeEnum)}
+          className="text-xs font-medium bg-transparent border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-accent"
+        >
+          {linkTypes.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
+
+        <div className="flex items-center gap-1 ml-auto shrink-0">
           <button
             onClick={() => onToggle(link.id)}
-            className="text-muted/40 hover:text-muted transition-colors"
+            className="text-muted/40 hover:text-muted transition-colors p-1"
+            title={link.is_active ? 'Hide link' : 'Show link'}
           >
             {link.is_active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
           </button>
           <button
             onClick={() => onDelete(link.id)}
-            className="text-muted/40 hover:text-red-500 transition-colors ml-auto"
+            className="text-muted/40 hover:text-red-500 transition-colors p-1"
+            title="Delete link"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Input
-            placeholder="Label"
-            value={link.label}
-            onChange={(e) => onUpdate(link.id, { label: e.target.value })}
-            className="text-sm !py-1.5"
-          />
-          <Input
-            placeholder={link.type === 'whatsapp' ? 'Phone number' : 'URL'}
-            value={link.url}
-            onChange={(e) =>
-              onUpdate(link.id, { url: formatUrl(link.type, e.target.value) })
-            }
-            className="text-sm !py-1.5"
-          />
-        </div>
       </div>
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Input
+          placeholder="Label (e.g. Visit our website)"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          className="text-sm !py-1.5"
+        />
+        <Input
+          placeholder={typeMeta?.placeholder || 'URL'}
+          value={urlValue}
+          onChange={(e) => setUrlValue(e.target.value)}
+          className="text-sm !py-1.5"
+        />
+      </div>
+
+      {isDirty && (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            onClick={handleSave}
+            loading={saving}
+            disabled={saving}
+          >
+            {saved ? (
+              <><Check className="w-3.5 h-3.5 mr-1" /> Saved</>
+            ) : (
+              'Save'
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -202,10 +259,10 @@ export default function LinksEditorPage() {
 
     setLinks([...links, data]);
     setShowAddModal(false);
-    toast.success('Link added');
+    toast.success('Link added — edit and save');
   };
 
-  const updateLink = async (id: string, data: Partial<LinkType>) => {
+  const saveLink = async (id: string, data: Partial<LinkType>) => {
     setLinks(links.map((l) => (l.id === id ? { ...l, ...data } : l)));
 
     const { error } = await supabase
@@ -213,7 +270,11 @@ export default function LinksEditorPage() {
       .update(data)
       .eq('id', id);
 
-    if (error) toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Saved');
+    }
   };
 
   const deleteLink = async (id: string) => {
@@ -231,7 +292,15 @@ export default function LinksEditorPage() {
     const link = links.find((l) => l.id === id);
     if (!link) return;
 
-    await updateLink(id, { is_active: !link.is_active });
+    const newActive = !link.is_active;
+    setLinks(links.map((l) => (l.id === id ? { ...l, is_active: newActive } : l)));
+
+    const { error } = await supabase
+      .from('links')
+      .update({ is_active: newActive })
+      .eq('id', id);
+
+    if (error) toast.error(error.message);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -263,7 +332,7 @@ export default function LinksEditorPage() {
         <div>
           <h1 className="text-2xl font-medium mb-1">Links</h1>
           <p className="text-sm text-muted">
-            Add, edit, and reorder your links.
+            Add your links below. Click Save after editing.
           </p>
         </div>
         <Button size="sm" onClick={() => setShowAddModal(true)}>
@@ -277,11 +346,11 @@ export default function LinksEditorPage() {
           <EmptyState
             icon={<Link2 className="w-10 h-10" />}
             title="No links yet"
-            description="Add your first link to get started."
+            description="Add your WhatsApp, Instagram, website, or any other link."
             action={
               <Button size="sm" onClick={() => setShowAddModal(true)}>
                 <Plus className="w-4 h-4 mr-1.5" />
-                Add link
+                Add your first link
               </Button>
             }
           />
@@ -301,7 +370,7 @@ export default function LinksEditorPage() {
                 <SortableLinkCard
                   key={link.id}
                   link={link}
-                  onUpdate={updateLink}
+                  onSave={saveLink}
                   onDelete={deleteLink}
                   onToggle={toggleLink}
                 />
@@ -311,14 +380,17 @@ export default function LinksEditorPage() {
         </DndContext>
       )}
 
-      <p className="text-xs text-muted mt-4">
-        Drag to reorder.
-      </p>
+      {links.length > 0 && (
+        <p className="text-xs text-muted mt-4">
+          Drag to reorder. Changes are saved when you click Save.
+        </p>
+      )}
 
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-            <h3 className="font-medium mb-4">Add a link</h3>
+            <h3 className="font-medium mb-2">Add a link</h3>
+            <p className="text-xs text-muted mb-4">Choose a link type to add.</p>
             <div className="grid grid-cols-2 gap-3">
               {linkTypes.map((t) => (
                 <button

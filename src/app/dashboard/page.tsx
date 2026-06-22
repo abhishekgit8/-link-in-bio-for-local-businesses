@@ -6,7 +6,7 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { QRCodeSVG } from 'qrcode.react';
-import { Copy, ExternalLink, Eye, MousePointerClick, Check } from 'lucide-react';
+import { Copy, ExternalLink, Eye, MousePointerClick, Check, Plus } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import type { Profile, Link as LinkType } from '@/lib/types';
@@ -80,6 +80,8 @@ export default function DashboardPage() {
   ];
   const completionCount = completionItems.filter(i => i.done).length;
 
+  const isNewUser = links.length === 0 && !profile?.bio;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
@@ -88,6 +90,34 @@ export default function DashboardPage() {
           Welcome back{profile?.business_name ? `, ${profile.business_name}` : ''}
         </p>
       </div>
+
+      {/* Welcome tip for new users */}
+      {isNewUser && (
+        <Card className="mb-6 border-accent/30 bg-accent/5">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0 mt-0.5">
+              <span className="text-lg">👋</span>
+            </div>
+            <div>
+              <h3 className="font-medium text-sm mb-1">Welcome to Rooted!</h3>
+              <p className="text-sm text-muted mb-3">
+                Your page is ready. Here&apos;s how to set it up:
+              </p>
+              <ol className="text-sm text-muted space-y-1 list-decimal list-inside">
+                <li>Go to <strong>Links</strong> — add your WhatsApp, Instagram, website, etc.</li>
+                <li>Go to <strong>Profile</strong> — add your logo, bio, and tagline</li>
+                <li>Go to <strong>Theme</strong> — pick a style that matches your brand</li>
+              </ol>
+              <Link href="/dashboard/links">
+                <Button size="sm" className="mt-3">
+                  <Plus className="w-3.5 h-3.5 mr-1.5" />
+                  Add your first link
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Your Rooted link */}
       {profile?.username ? (
