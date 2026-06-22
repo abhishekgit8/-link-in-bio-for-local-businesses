@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import type { Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
 
 interface Props {
@@ -61,48 +60,52 @@ function getLinkIcon(type: string) {
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { username } = await params;
-  const supabase = await createClient();
+  try {
+    const { username } = await params;
+    const supabase = await createClient();
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('business_name, tagline, bio, logo_url, username')
-    .eq('username', username)
-    .maybeSingle();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('business_name, tagline, bio, logo_url, username')
+      .eq('username', username)
+      .maybeSingle();
 
-  if (!profile) return { title: 'Not Found — Rooted' };
+    if (!profile) return { title: 'Not Found — Rooted' };
 
-  const title = profile.tagline
-    ? `${profile.business_name} — ${profile.tagline}`
-    : `${profile.business_name} | Rooted`;
+    const title = profile.tagline
+      ? `${profile.business_name} — ${profile.tagline}`
+      : `${profile.business_name} | Rooted`;
 
-  return {
-    title,
-    description:
-      profile.bio || `Visit ${profile.business_name} on Rooted. Find their links, WhatsApp, location and more.`,
-    openGraph: {
-      title: profile.business_name,
-      description: profile.bio || undefined,
-      url: `https://rooted.sbs/${profile.username}`,
-      images: profile.logo_url
-        ? [{ url: profile.logo_url, width: 400, height: 400 }]
-        : [{ url: '/default-og.png', width: 1200, height: 630 }],
-      type: 'profile',
-    },
-    twitter: {
-      card: 'summary',
-      title: profile.business_name,
-      description: profile.bio || undefined,
-      images: profile.logo_url ? [profile.logo_url] : ['/default-og.png'],
-    },
-    alternates: {
-      canonical: `https://rooted.sbs/${profile.username}`,
-    },
-    robots: {
-      index: true,
-      follow: true,
-    },
-  };
+    return {
+      title,
+      description:
+        profile.bio || `Visit ${profile.business_name} on Rooted. Find their links, WhatsApp, location and more.`,
+      openGraph: {
+        title: profile.business_name,
+        description: profile.bio || undefined,
+        url: `https://rooted.sbs/${profile.username}`,
+        images: profile.logo_url
+          ? [{ url: profile.logo_url, width: 400, height: 400 }]
+          : [{ url: '/default-og.png', width: 1200, height: 630 }],
+        type: 'profile',
+      },
+      twitter: {
+        card: 'summary',
+        title: profile.business_name,
+        description: profile.bio || undefined,
+        images: profile.logo_url ? [profile.logo_url] : ['/default-og.png'],
+      },
+      alternates: {
+        canonical: `https://rooted.sbs/${profile.username}`,
+      },
+      robots: {
+        index: true,
+        follow: true,
+      },
+    };
+  } catch {
+    return { title: 'Rooted' };
+  }
 }
 
 export default async function PublicProfilePage({ params }: Props) {
@@ -140,9 +143,6 @@ export default async function PublicProfilePage({ params }: Props) {
   const buttonStyle = (profile.button_style || 'filled') as ButtonStyle;
   const font = (profile.font || 'inter') as Font;
   const styles = themeStyles[theme];
-
-  // Server-side page view tracking (fire-and-forget, don't crash the page)
-  void supabase.from('page_views').insert({ profile_id: profile.id });
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -185,13 +185,12 @@ export default async function PublicProfilePage({ params }: Props) {
           {/* Logo */}
           <div className="w-20 h-20 mb-4" style={{ aspectRatio: '1 / 1' }}>
             {profile.logo_url ? (
-              <Image
+              <img
                 src={profile.logo_url}
                 alt={profile.business_name}
                 width={80}
                 height={80}
-                priority
-                className="rounded-full object-cover border-2"
+                className="w-20 h-20 rounded-full object-cover border-2"
                 style={{ borderColor: styles.muted + '30' }}
               />
             ) : (
