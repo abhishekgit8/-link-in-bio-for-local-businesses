@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { EmptyState } from '@/components/ui/EmptyState';
 import {
   LineChart,
   Line,
@@ -17,8 +15,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { BarChart3, Eye, MousePointerClick } from 'lucide-react';
-import Link from 'next/link';
+import { Eye, MousePointerClick } from 'lucide-react';
 
 interface DailyViews {
   date: string;
@@ -36,7 +33,6 @@ export default function AnalyticsPage() {
   const [totalViews, setTotalViews] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isPro, setIsPro] = useState(false);
   const supabase = createClient();
 
   function aggregateByDay(data: { created_at: string }[]): DailyViews[] {
@@ -71,19 +67,6 @@ export default function AnalyticsPage() {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .single();
-
-      setIsPro(profile?.subscription_tier === 'pro');
-
-      if (profile?.subscription_tier !== 'pro') {
-        setLoading(false);
-        return;
-      }
-
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -93,7 +76,6 @@ export default function AnalyticsPage() {
         .eq('profile_id', user.id)
         .gte('created_at', thirtyDaysAgo.toISOString());
 
-      // Get links for this profile
       const { data: linksData } = await supabase
         .from('links')
         .select('id, label')
@@ -107,12 +89,10 @@ export default function AnalyticsPage() {
         .in('link_id', linkIds.length > 0 ? linkIds : ['__none__'])
         .gte('created_at', thirtyDaysAgo.toISOString());
 
-      // Aggregate views by day
       const viewsByDay = aggregateByDay(viewsData || []);
       setViews(viewsByDay);
       setTotalViews((viewsData || []).length);
 
-      // Aggregate clicks by link
       const linkMap = new Map((linksData || []).map(l => [l.id, l.label]));
       const clicksByLinkMap = new Map<string, number>();
       (clicksData || []).forEach(c => {
@@ -132,31 +112,6 @@ export default function AnalyticsPage() {
   }, []);
 
   if (loading) return <PageLoader />;
-
-  if (!isPro) {
-    return (
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-medium mb-1">Analytics</h1>
-          <p className="text-sm text-muted">
-            Track your profile views and link clicks.
-          </p>
-        </div>
-        <Card>
-          <EmptyState
-            icon={<BarChart3 className="w-10 h-10" />}
-            title="Upgrade to see analytics"
-            description="Analytics are available on the Pro plan. Upgrade to track your page views and link clicks."
-            action={
-              <Link href="/pricing">
-                <Button size="sm">View pricing</Button>
-              </Link>
-            }
-          />
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

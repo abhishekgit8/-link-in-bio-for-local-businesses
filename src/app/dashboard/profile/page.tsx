@@ -30,7 +30,7 @@ export default function ProfileEditorPage() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       const { data: linksData } = await supabase
         .from('links')

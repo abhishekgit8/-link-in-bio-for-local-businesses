@@ -29,18 +29,34 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect dashboard routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+  const path = request.nextUrl.pathname;
+
+  // Protect dashboard routes — redirect to login if not authenticated
+  if (path.startsWith('/dashboard') && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
+  // For authenticated dashboard users, check if profile exists
+  if (user && path.startsWith('/dashboard')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!profile) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding';
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Redirect logged-in users away from auth pages
   if (
     user &&
-    (request.nextUrl.pathname === '/login' ||
-      request.nextUrl.pathname === '/signup')
+    (path === '/login' || path === '/signup')
   ) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
@@ -52,6 +68,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|auth/callback|api/.*|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

@@ -43,7 +43,7 @@ export default function OnboardingPage() {
         .from('profiles')
         .select('business_name')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (data?.business_name) {
         router.push('/dashboard');
@@ -118,7 +118,6 @@ export default function OnboardingPage() {
       theme: 'classic',
       button_style: 'filled',
       font: 'inter',
-      subscription_tier: 'free',
     });
 
     if (error) {

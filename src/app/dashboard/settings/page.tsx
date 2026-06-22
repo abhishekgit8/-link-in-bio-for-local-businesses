@@ -6,10 +6,8 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { AlertTriangle, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import toast from 'react-hot-toast';
 import type { Profile } from '@/lib/types';
 
@@ -39,7 +37,7 @@ export default function SettingsPage() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setProfile(data);
@@ -74,7 +72,6 @@ export default function SettingsPage() {
     if (!profile || !username.trim()) return;
     setSaving(true);
 
-    // Insert redirect for old username
     if (profile.username && profile.username !== username.trim().toLowerCase()) {
       await supabase.from('username_redirects').insert({
         old_username: profile.username,
@@ -105,18 +102,6 @@ export default function SettingsPage() {
     }
   };
 
-  const cancelSubscription = async () => {
-    const res = await fetch('/api/razorpay/cancel', { method: 'POST' });
-    const data = await res.json();
-
-    if (data.success) {
-      toast.success('Subscription will cancel at end of billing period.');
-      setProfile({ ...profile!, subscription_status: 'cancelling' });
-    } else {
-      toast.error(data.error || 'Failed to cancel subscription');
-    }
-  };
-
   const deleteAccount = async () => {
     if (deleteConfirm !== 'DELETE') {
       toast.error('Type DELETE to confirm');
@@ -141,7 +126,7 @@ export default function SettingsPage() {
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="mb-8">
           <h1 className="text-2xl font-medium mb-1">Settings</h1>
-          <p className="text-sm text-muted">Manage your account and subscription.</p>
+          <p className="text-sm text-muted">Manage your account.</p>
         </div>
         <Card>
           <div className="text-center py-8">
@@ -157,7 +142,7 @@ export default function SettingsPage() {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-medium mb-1">Settings</h1>
-        <p className="text-sm text-muted">Manage your account and subscription.</p>
+        <p className="text-sm text-muted">Manage your account.</p>
       </div>
 
       <div className="space-y-6">
@@ -243,46 +228,6 @@ export default function SettingsPage() {
             <option value="photographer">Photographer</option>
             <option value="other">Other</option>
           </select>
-        </Card>
-
-        {/* Subscription */}
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-medium">Subscription</h3>
-              <p className="text-xs text-muted mt-0.5">
-                You are on the{" "}
-                <Badge variant={profile.subscription_tier === 'pro' ? 'pro' : 'free'}>
-                  {profile.subscription_tier === 'pro' ? 'Pro' : 'Free'}
-                </Badge>{" "}
-                plan
-              </p>
-            </div>
-            {profile.subscription_tier !== 'pro' && (
-              <Link href="/pricing">
-                <Button size="sm">Upgrade to Pro</Button>
-              </Link>
-            )}
-          </div>
-          {profile.subscription_tier === 'pro' && (
-            <div className="space-y-3">
-              <p className="text-xs text-muted">
-                You have access to all Pro features.
-                {profile.subscription_end_date && (
-                  <> Next billing date: {new Date(profile.subscription_end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</>
-                )}
-              </p>
-              {profile.subscription_status === 'cancelling' ? (
-                <p className="text-xs text-amber-600">
-                  Your subscription will cancel at the end of the billing period.
-                </p>
-              ) : (
-                <Button variant="ghost" size="sm" onClick={cancelSubscription}>
-                  Cancel subscription
-                </Button>
-              )}
-            </div>
-          )}
         </Card>
 
         {/* Danger zone */}

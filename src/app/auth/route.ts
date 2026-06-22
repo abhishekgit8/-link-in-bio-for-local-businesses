@@ -5,10 +5,14 @@ export async function POST(request: Request) {
   const { email } = await request.json();
   const supabase = await createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const redirectPath = user ? '/dashboard' : '/onboarding';
+
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://rooted.sbs'}/auth/callback?next=${redirectPath}`,
     },
   });
 

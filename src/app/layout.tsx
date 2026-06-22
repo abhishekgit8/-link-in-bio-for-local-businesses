@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
-import { Inter, Instrument_Serif } from "next/font/google";
+import { Inter, Instrument_Serif, Poppins } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
@@ -15,6 +14,14 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-serif",
+  display: "swap",
+  preload: true,
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-poppins",
   display: "swap",
   preload: true,
 });
@@ -81,13 +88,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${inter.variable} ${instrumentSerif.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans bg-surface text-primary">
-        <Script
-          src="https://checkout.razorpay.com/v1/checkout.js"
-          strategy="lazyOnload"
-        />
         {children}
         <Toaster
           position="bottom-center"

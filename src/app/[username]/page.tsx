@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import type { Profile, Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
+import type { Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .from('profiles')
     .select('business_name, tagline, bio, logo_url, username')
     .eq('username', username)
-    .single();
+    .maybeSingle();
 
   if (!profile) return { title: 'Not Found — Rooted' };
 
@@ -114,7 +114,7 @@ export default async function PublicProfilePage({ params }: Props) {
     .from('username_redirects')
     .select('new_username')
     .eq('old_username', username.toLowerCase())
-    .single();
+    .maybeSingle();
 
   if (redirectData) {
     redirect(`/${redirectData.new_username}`);
@@ -124,7 +124,7 @@ export default async function PublicProfilePage({ params }: Props) {
     .from('profiles')
     .select('*')
     .eq('username', username)
-    .single();
+    .maybeSingle();
 
   if (!profile) notFound();
 
@@ -140,7 +140,6 @@ export default async function PublicProfilePage({ params }: Props) {
   const buttonStyle = (profile.button_style || 'filled') as ButtonStyle;
   const font = (profile.font || 'inter') as Font;
   const styles = themeStyles[theme];
-  const isPro = profile.subscription_tier === 'pro';
 
   // Server-side page view tracking
   await supabase.from('page_views').insert({ profile_id: profile.id });

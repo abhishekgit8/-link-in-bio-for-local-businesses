@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, ExternalLink, Eye, MousePointerClick, Check } from 'lucide-react';
@@ -32,7 +31,7 @@ export default function DashboardPage() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       const { data: linksData } = await supabase
         .from('links')
@@ -115,9 +114,6 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </div>
-            <Badge variant={profile.subscription_tier === 'pro' ? 'pro' : 'free'}>
-              {profile.subscription_tier === 'pro' ? 'Pro' : 'Free'}
-            </Badge>
           </div>
         </Card>
       ) : (

@@ -6,16 +6,15 @@ import { PageLoader } from '@/components/ui/PageLoader';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ProfilePreview } from '@/components/ProfilePreview';
-import { Check, Lock } from 'lucide-react';
-import Link from 'next/link';
+import { Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Profile, Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
 
-const themes: { value: Theme; label: string; desc: string; pro?: boolean }[] = [
+const themes: { value: Theme; label: string; desc: string }[] = [
   { value: 'classic', label: 'Classic', desc: 'White card, dark text, Inter font' },
-  { value: 'dark', label: 'Dark', desc: '#1A1A1A bg, white text', pro: true },
+  { value: 'dark', label: 'Dark', desc: '#1A1A1A bg, white text' },
   { value: 'warm', label: 'Warm', desc: '#FDF6EC bg, serif font' },
-  { value: 'minimal', label: 'Minimal', desc: 'Transparent cards, thin borders', pro: true },
+  { value: 'minimal', label: 'Minimal', desc: 'Transparent cards, thin borders' },
 ];
 
 const buttonStyles: { value: ButtonStyle; label: string }[] = [
@@ -50,7 +49,7 @@ export default function AppearancePage() {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       const { data: linksData } = await supabase
         .from('links')
@@ -67,13 +66,6 @@ export default function AppearancePage() {
 
   const updateTheme = async (field: string, value: string) => {
     if (!profile) return;
-
-    // Pro gate for themes
-    const theme = themes.find(t => t.value === value);
-    if (theme?.pro && profile.subscription_tier !== 'pro') {
-      toast.error('Upgrade to Pro to use this theme');
-      return;
-    }
 
     const updated = { ...profile, [field]: value };
     setProfile(updated);
@@ -109,8 +101,6 @@ export default function AppearancePage() {
     );
   }
 
-  const isPro = profile.subscription_tier === 'pro';
-
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex items-center justify-between mb-8">
@@ -138,13 +128,12 @@ export default function AppearancePage() {
             <h3 className="font-medium mb-4">Theme</h3>
             <div className="grid grid-cols-2 gap-3">
               {themes.map((t) => {
-                const locked = t.pro && !isPro;
                 const selected = profile.theme === t.value;
                 return (
                   <button
                     key={t.value}
                     onClick={() => updateTheme('theme', t.value)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all duration-200 relative ${
+                    className={`p-4 rounded-xl border-2 text-left transition-all duration-200 ${
                       selected
                         ? 'border-accent bg-accent/5'
                         : 'border-border hover:border-primary/20'
@@ -153,16 +142,8 @@ export default function AppearancePage() {
                     {selected && (
                       <Check className="w-3.5 h-3.5 text-accent mb-2" />
                     )}
-                    {locked && (
-                      <Lock className="w-3 h-3 text-muted absolute top-3 right-3" />
-                    )}
                     <p className="text-sm font-medium">{t.label}</p>
                     <p className="text-xs text-muted mt-0.5">{t.desc}</p>
-                    {locked && (
-                      <Link href="/pricing" className="text-xs text-accent font-medium mt-1 inline-block">
-                        Upgrade to Pro
-                      </Link>
-                    )}
                   </button>
                 );
               })}
@@ -221,7 +202,6 @@ export default function AppearancePage() {
         </div>
       </div>
 
-      {/* Mobile preview overlay */}
       {showPreview && (
         <div className="fixed inset-0 z-40 bg-white md:hidden overflow-y-auto pt-4">
           <div className="flex justify-end px-4 mb-4">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { Card } from '@/components/ui/Card';
@@ -23,10 +23,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Plus, Trash2, Link2, Phone, MessageCircle, Instagram, MapPin, Mail, Globe, Eye, EyeOff, Lock } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Link2, Phone, MessageCircle, Instagram, MapPin, Mail, Globe, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
-import type { Link as LinkType, LinkType as LinkTypeEnum, Profile } from '@/lib/types';
+import type { Link as LinkType, LinkType as LinkTypeEnum } from '@/lib/types';
 
 const linkTypes: { value: LinkTypeEnum; label: string; icon: React.ReactNode }[] = [
   { value: 'url', label: 'URL', icon: <Globe className="w-4 h-4" /> },
@@ -150,7 +149,6 @@ export default function LinksEditorPage() {
   const [links, setLinks] = useState<LinkType[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
-  const [isPro, setIsPro] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const supabase = createClient();
 
@@ -168,14 +166,6 @@ export default function LinksEditorPage() {
       }
       setProfileId(user.id);
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .single();
-
-      setIsPro(profileData?.subscription_tier === 'pro');
-
       const { data } = await supabase
         .from('links')
         .select('*')
@@ -188,14 +178,8 @@ export default function LinksEditorPage() {
     load();
   }, []);
 
-  const atLimit = !isPro && links.length >= 5;
-
   const addLink = async (type: LinkTypeEnum = 'url', label = 'New Link', url = '') => {
     if (!profileId) return;
-    if (atLimit) {
-      toast.error('Free plan limited to 5 links. Upgrade to Pro for unlimited.');
-      return;
-    }
     const position = links.length;
 
     const { data, error } = await supabase
@@ -282,19 +266,10 @@ export default function LinksEditorPage() {
             Add, edit, and reorder your links.
           </p>
         </div>
-        {atLimit ? (
-          <Link href="/pricing">
-            <Button size="sm">
-              <Lock className="w-3.5 h-3.5 mr-1.5" />
-              Upgrade
-            </Button>
-          </Link>
-        ) : (
-          <Button size="sm" onClick={() => setShowAddModal(true)}>
-            <Plus className="w-4 h-4 mr-1.5" />
-            Add link
-          </Button>
-        )}
+        <Button size="sm" onClick={() => setShowAddModal(true)}>
+          <Plus className="w-4 h-4 mr-1.5" />
+          Add link
+        </Button>
       </div>
 
       {links.length === 0 ? (
@@ -337,10 +312,9 @@ export default function LinksEditorPage() {
       )}
 
       <p className="text-xs text-muted mt-4">
-        {!isPro && `Free plan: ${links.length}/5 links used.`} Drag to reorder.
+        Drag to reorder.
       </p>
 
-      {/* Add link type selector modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
