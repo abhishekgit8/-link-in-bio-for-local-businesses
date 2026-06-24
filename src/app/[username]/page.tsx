@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import type { Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
 import { LinkItem } from '@/components/LinkItem';
@@ -150,21 +151,27 @@ export default async function PublicProfilePage({ params }: Props) {
         <div className="w-full max-w-md">
           {profile.cover_url && (
             <div className="w-full h-40 rounded-2xl overflow-hidden mb-6">
-              <img
+              <Image
                 src={profile.cover_url}
                 alt=""
+                width={800}
+                height={320}
                 className="w-full h-full object-cover"
+                priority
               />
             </div>
           )}
 
           <div className="text-center mb-8">
             {profile.logo_url && (
-              <img
+              <Image
                 src={profile.logo_url}
                 alt={profile.business_name}
+                width={160}
+                height={160}
                 className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-2"
                 style={{ borderColor: themeStyle.card }}
+                priority
               />
             )}
             <h1 className="text-2xl font-bold mb-1">{profile.business_name}</h1>
