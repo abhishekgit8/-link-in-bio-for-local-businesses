@@ -14,10 +14,10 @@ export default function QRCodePage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);

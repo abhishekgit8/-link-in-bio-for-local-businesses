@@ -33,7 +33,6 @@ export default function AnalyticsPage() {
   const [totalViews, setTotalViews] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   function aggregateByDay(data: { created_at: string }[]): DailyViews[] {
     const days: Record<string, number> = {};
@@ -61,6 +60,7 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);

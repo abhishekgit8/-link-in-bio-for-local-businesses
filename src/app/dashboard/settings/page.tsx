@@ -20,11 +20,11 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
-  const supabase = createClient();
   const router = useRouter();
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
@@ -55,6 +55,7 @@ export default function SettingsPage() {
 
     const timer = setTimeout(async () => {
       setCheckingUsername(true);
+      const supabase = createClient();
       const { data, error } = await supabase
         .from('profiles')
         .select('username')
@@ -71,6 +72,7 @@ export default function SettingsPage() {
   const updateUsername = async () => {
     if (!profile || !username.trim()) return;
     setSaving(true);
+    const supabase = createClient();
 
     if (profile.username && profile.username !== username.trim().toLowerCase()) {
       await supabase.from('username_redirects').insert({
@@ -94,6 +96,7 @@ export default function SettingsPage() {
   };
 
   const updateEmail = async () => {
+    const supabase = createClient();
     const { error } = await supabase.auth.updateUser({ email });
     if (error) {
       toast.error(error.message);
@@ -108,6 +111,7 @@ export default function SettingsPage() {
       return;
     }
 
+    const supabase = createClient();
     const { error } = await supabase.rpc('delete_user');
     if (error) {
       toast.error(error.message);
@@ -211,6 +215,7 @@ export default function SettingsPage() {
             value={profile.category || ''}
             onChange={async (e) => {
               const val = e.target.value;
+              const supabase = createClient();
               const { error } = await supabase
                 .from('profiles')
                 .update({ category: val || null })
