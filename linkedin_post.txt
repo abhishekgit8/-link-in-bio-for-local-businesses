@@ -1,9 +1,0 @@
-I wanted to see how fast I could build something useful from scratch. In just 6 hours, I built and shipped **Rooted** (https://rooted.sbs) 🚀
-
-It’s a simple, free link-in-bio tool for local businesses. While there are many out there, building my own end-to-end was a great technical challenge. 
-
-I used the **Opencode MiMo V2.5 Free model** as my AI pair programmer to build the entire platform. 
-
-Check it out and let me know what you think! 
-
-#webdev #opencode #ai #indiehackers
