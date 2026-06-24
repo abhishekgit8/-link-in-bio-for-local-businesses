@@ -47,17 +47,17 @@ export default function LandingPage() {
                           className="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-medium text-primary"
                           style={{ backgroundColor: bg }}
                         >
-                          {['P', 'A', 'R', 'S', 'M'][i]}
+                          {['S', 'C', 'T', 'F', 'P'][i]}
                         </div>
                       ))}
                     </div>
                     <p className="text-sm text-muted">
-                      <span className="font-semibold text-primary">500+</span> local businesses on Rooted
+                      Built for <span className="font-semibold text-primary">salons, cafes & tutors</span> across India
                     </p>
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted">
-                    <span className="text-accent">★★★★★</span>
-                    <span>Loved by salons, cafes & tutors across India</span>
+                    <span className="text-accent">⚡</span>
+                    <span>Set up in under 2 minutes</span>
                   </div>
                 </div>
               </div>
