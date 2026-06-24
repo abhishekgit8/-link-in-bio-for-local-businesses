@@ -122,40 +122,26 @@ export default function LandingPage() {
               Simple, transparent pricing
             </h2>
             <p className="text-muted text-center mb-12 max-w-md mx-auto">
-              Start free, upgrade when you&apos;re ready.
+              Everything is free. Build your page, share your link, grow your business.
             </p>
-            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <div className="max-w-lg mx-auto">
               <PricingCard
-                name="Free"
+                name="Free Forever"
                 price="₹0"
                 period="forever"
                 features={[
-                  '1 profile page',
-                  'Up to 5 links',
-                  'Basic themes (Classic, Warm)',
+                  '1 beautiful profile page',
+                  'Unlimited links',
+                  'All 4 themes (Classic, Dark, Warm, Minimal)',
+                  'All 3 fonts (Inter, Instrument Serif, Poppins)',
                   'WhatsApp, Instagram, Maps links',
-                  '"Made with Rooted" badge',
+                  'Analytics dashboard',
+                  'QR code for your page',
+                  'Custom button styles',
                 ]}
                 cta="Get started free"
                 href="/signup"
-                highlighted={false}
-              />
-              <PricingCard
-                name="Pro"
-                price="₹299"
-                period="/month"
-                features={[
-                  'Unlimited links',
-                  'All 4 themes including Dark & Minimal',
-                  'Analytics dashboard',
-                  'Remove "Made with Rooted" badge',
-                  'Custom button colors',
-                  'Priority support',
-                ]}
-                cta="Upgrade to Pro"
-                href="/signup"
                 highlighted={true}
-                badge="Popular"
               />
             </div>
           </div>
