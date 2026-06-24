@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import type { Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
 import { LinkItem } from '@/components/LinkItem';
+import { VCardButton, MapEmbed } from '@/components/ProfileActions';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -138,6 +139,10 @@ export default async function PublicProfilePage({ params }: Props) {
     image: profile.logo_url || undefined,
   };
 
+  const mapsLink = (links || []).find((l: LinkType) => l.type === 'maps');
+  const phoneLink = (links || []).find((l: LinkType) => l.type === 'phone');
+  const emailLink = (links || []).find((l: LinkType) => l.type === 'email');
+
   return (
     <>
       <script
@@ -188,7 +193,7 @@ export default async function PublicProfilePage({ params }: Props) {
           </div>
 
           <div className="flex flex-col gap-3">
-            {(links || []).map((link: LinkType) => (
+            {(links || []).filter((l: LinkType) => l.type !== 'maps').map((link: LinkType) => (
               <LinkItem
                 key={link.id}
                 link={link}
@@ -196,12 +201,28 @@ export default async function PublicProfilePage({ params }: Props) {
                 iconColor={themeStyle.text}
               />
             ))}
+
+            <VCardButton
+              businessName={profile.business_name}
+              tagline={profile.tagline}
+              bio={profile.bio}
+              username={profile.username}
+              phone={phoneLink?.url?.replace('tel:', '')}
+              email={emailLink?.url?.replace('mailto:', '')}
+              address={mapsLink?.url}
+              themeStyle={themeStyle}
+              buttonStyle={getButtonClasses(buttonStyle, themeStyle.text)}
+            />
           </div>
 
           {(links || []).length === 0 && (
             <p className="text-center text-sm py-8" style={{ color: themeStyle.muted }}>
               No links yet.
             </p>
+          )}
+
+          {mapsLink && (
+            <MapEmbed mapsUrl={mapsLink.url} />
           )}
 
           <div className="text-center mt-12">
