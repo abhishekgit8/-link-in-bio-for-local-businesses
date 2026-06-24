@@ -16,10 +16,10 @@ export default function ProfileEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
@@ -49,6 +49,7 @@ export default function ProfileEditorPage() {
     if (!profile) return;
     setSaving(true);
 
+    const supabase = createClient();
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -72,6 +73,7 @@ export default function ProfileEditorPage() {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !profile) return;
+    const supabase = createClient();
 
     if (!ALLOWED_TYPES.includes(file.type)) {
       toast.error('Only JPG, PNG, and WebP images are allowed.');

@@ -207,7 +207,6 @@ export default function LinksEditorPage() {
   const [loading, setLoading] = useState(true);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const supabase = createClient();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -216,6 +215,7 @@ export default function LinksEditorPage() {
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
@@ -238,6 +238,7 @@ export default function LinksEditorPage() {
   const addLink = async (type: LinkTypeEnum = 'url', label = 'New Link', url = '') => {
     if (!profileId) return;
     const position = links.length;
+    const supabase = createClient();
 
     const { data, error } = await supabase
       .from('links')
@@ -265,6 +266,7 @@ export default function LinksEditorPage() {
   const saveLink = async (id: string, data: Partial<LinkType>) => {
     setLinks(links.map((l) => (l.id === id ? { ...l, ...data } : l)));
 
+    const supabase = createClient();
     const { error } = await supabase
       .from('links')
       .update(data)
@@ -280,6 +282,7 @@ export default function LinksEditorPage() {
   const deleteLink = async (id: string) => {
     setLinks(links.filter((l) => l.id !== id));
 
+    const supabase = createClient();
     const { error } = await supabase.from('links').delete().eq('id', id);
     if (error) {
       toast.error(error.message);
@@ -295,6 +298,7 @@ export default function LinksEditorPage() {
     const newActive = !link.is_active;
     setLinks(links.map((l) => (l.id === id ? { ...l, is_active: newActive } : l)));
 
+    const supabase = createClient();
     const { error } = await supabase
       .from('links')
       .update({ is_active: newActive })
@@ -310,11 +314,12 @@ export default function LinksEditorPage() {
       clearTimeout(pendingReorderRef.current);
     }
     pendingReorderRef.current = setTimeout(async () => {
+      const supabase = createClient();
       const { error } = await supabase.from('links').upsert(items);
       if (error) toast.error('Failed to save order');
       else toast.success('Order saved');
     }, 800);
-  }, [supabase]);
+  }, []);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;

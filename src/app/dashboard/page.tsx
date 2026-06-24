@@ -17,10 +17,10 @@ export default function DashboardPage() {
   const [totalViews, setTotalViews] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
     async function loadProfile() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);

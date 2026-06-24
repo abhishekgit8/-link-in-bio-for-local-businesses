@@ -35,10 +35,10 @@ export default function AppearancePage() {
   const [links, setLinks] = useState<LinkType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPreview, setShowPreview] = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
     async function load() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
@@ -70,6 +70,7 @@ export default function AppearancePage() {
     const updated = { ...profile, [field]: value };
     setProfile(updated);
 
+    const supabase = createClient();
     const { error } = await supabase
       .from('profiles')
       .update({ [field]: value })
