@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     "freelancer portfolio link",
   ],
   icons: {
-    icon: "/favicon.svg",
+    icon: "/favicon.png",
   },
   openGraph: {
     type: "website",
