@@ -48,7 +48,7 @@ export function LinkItem({ link, buttonStyle, iconColor }: LinkItemProps) {
       href={link.url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`flex items-center gap-3 w-full px-5 py-3.5 rounded-xl transition-all duration-200 active:scale-[0.98] ${buttonStyle}`}
+      className={`flex items-center gap-3 w-full px-5 py-3.5 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98] active:translate-y-0 ${buttonStyle}`}
       data-link-id={link.id}
       onClick={handleClick}
     >

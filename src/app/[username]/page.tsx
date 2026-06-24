@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import type { Link as LinkType, Theme, ButtonStyle, Font } from '@/lib/types';
 import { LinkItem } from '@/components/LinkItem';
+import { VCardButton, MapEmbed } from '@/components/ProfileActions';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -137,6 +139,10 @@ export default async function PublicProfilePage({ params }: Props) {
     image: profile.logo_url || undefined,
   };
 
+  const mapsLink = (links || []).find((l: LinkType) => l.type === 'maps');
+  const phoneLink = (links || []).find((l: LinkType) => l.type === 'phone');
+  const emailLink = (links || []).find((l: LinkType) => l.type === 'email');
+
   return (
     <>
       <script
@@ -150,21 +156,27 @@ export default async function PublicProfilePage({ params }: Props) {
         <div className="w-full max-w-md">
           {profile.cover_url && (
             <div className="w-full h-40 rounded-2xl overflow-hidden mb-6">
-              <img
+              <Image
                 src={profile.cover_url}
                 alt=""
+                width={800}
+                height={320}
                 className="w-full h-full object-cover"
+                priority
               />
             </div>
           )}
 
           <div className="text-center mb-8">
             {profile.logo_url && (
-              <img
+              <Image
                 src={profile.logo_url}
                 alt={profile.business_name}
+                width={160}
+                height={160}
                 className="w-20 h-20 rounded-full mx-auto mb-4 object-cover border-2"
                 style={{ borderColor: themeStyle.card }}
+                priority
               />
             )}
             <h1 className="text-2xl font-bold mb-1">{profile.business_name}</h1>
@@ -181,7 +193,7 @@ export default async function PublicProfilePage({ params }: Props) {
           </div>
 
           <div className="flex flex-col gap-3">
-            {(links || []).map((link: LinkType) => (
+            {(links || []).filter((l: LinkType) => l.type !== 'maps').map((link: LinkType) => (
               <LinkItem
                 key={link.id}
                 link={link}
@@ -189,12 +201,28 @@ export default async function PublicProfilePage({ params }: Props) {
                 iconColor={themeStyle.text}
               />
             ))}
+
+            <VCardButton
+              businessName={profile.business_name}
+              tagline={profile.tagline}
+              bio={profile.bio}
+              username={profile.username}
+              phone={phoneLink?.url?.replace('tel:', '')}
+              email={emailLink?.url?.replace('mailto:', '')}
+              address={mapsLink?.url}
+              themeStyle={themeStyle}
+              buttonStyle={getButtonClasses(buttonStyle, themeStyle.text)}
+            />
           </div>
 
           {(links || []).length === 0 && (
             <p className="text-center text-sm py-8" style={{ color: themeStyle.muted }}>
               No links yet.
             </p>
+          )}
+
+          {mapsLink && (
+            <MapEmbed mapsUrl={mapsLink.url} />
           )}
 
           <div className="text-center mt-12">

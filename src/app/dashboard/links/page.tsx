@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { PageLoader } from '@/components/ui/PageLoader';
 import { Card } from '@/components/ui/Card';
@@ -303,6 +303,19 @@ export default function LinksEditorPage() {
     if (error) toast.error(error.message);
   };
 
+  const pendingReorderRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedSaveOrder = useCallback((items: { id: string; position: number; profile_id: string }[]) => {
+    if (pendingReorderRef.current) {
+      clearTimeout(pendingReorderRef.current);
+    }
+    pendingReorderRef.current = setTimeout(async () => {
+      const { error } = await supabase.from('links').upsert(items);
+      if (error) toast.error('Failed to save order');
+      else toast.success('Order saved');
+    }, 800);
+  }, [supabase]);
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -317,11 +330,9 @@ export default function LinksEditorPage() {
     const updated = reordered.map((l, i) => ({ ...l, position: i }));
     setLinks(updated);
 
-    const { error } = await supabase.from('links').upsert(
+    debouncedSaveOrder(
       updated.map((l) => ({ id: l.id, position: l.position, profile_id: l.profile_id }))
     );
-
-    if (error) toast.error('Failed to save order');
   };
 
   if (loading) return <PageLoader />;

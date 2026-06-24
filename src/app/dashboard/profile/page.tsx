@@ -66,9 +66,22 @@ export default function ProfileEditorPage() {
     setSaving(false);
   };
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !profile) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error('Only JPG, PNG, and WebP images are allowed.');
+      return;
+    }
+
+    if (file.size > MAX_SIZE) {
+      toast.error('Image must be under 2MB.');
+      return;
+    }
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${profile.id}-${Date.now()}.${fileExt}`;

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import { BarChart3, Link2, Palette, Settings, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { BarChart3, Link2, Palette, Settings, User, LogOut, LayoutDashboard, QrCode } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 const navItems = [
@@ -12,6 +12,7 @@ const navItems = [
   { href: '/dashboard/profile', label: 'Profile', icon: User },
   { href: '/dashboard/links', label: 'Links', icon: Link2 },
   { href: '/dashboard/appearance', label: 'Theme', icon: Palette },
+  { href: '/dashboard/qr-code', label: 'QR Code', icon: QrCode },
   { href: '/dashboard/analytics', label: 'Stats', icon: BarChart3 },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
